@@ -1,0 +1,225 @@
+;-----------------------------------------------------------
+;设置光标位置  
+SETPOS MACRO TOP,LEFT  
+MOV AH,02H  
+MOV BX,0  
+MOV DH,TOP  
+MOV DL,LEFT  
+INT 10H  
+ENDM 
+;--------------------------------------
+HENG    MACRO  X1,Y1,X2  ; 写横的宏 
+        PUSH AX
+        PUSH BX
+        PUSH CX
+        PUSH DX
+          MOV DH,X1  
+          MOV DL,Y1
+          MOV AH,02H  
+          MOV BX,0              
+          INT 10H
+          MOV  BH,0
+          MOV BL,11111000B
+          MOV AL,'-'
+          MOV  AH,09H             
+          MOV CX,X2
+          INT   10H
+        POP DX
+        POP CX
+        POP BX
+        POP AX
+          ENDM
+;--------------------------------------
+;--------------------------------------
+SHU     MACRO  CX1,CY1,CY2
+        PUSH AX
+        PUSH BX
+        PUSH CX
+        PUSH DX
+ LOCAL   BH2
+          MOV [COUNT],0
+          MOV DH,CX1  
+          MOV DL,CY1 
+  BH2:    MOV AH,02H  
+          MOV BX,0  
+          INT 10H
+          MOV BH,0
+          MOV BL,11111000B
+          MOV AL,'|'
+          MOV CX,1
+          MOV AH,09H
+          INT 10H
+          INC DH
+          INC [COUNT]
+          CMP [COUNT],CY2
+          JNZ  BH2
+        POP DX
+        POP CX
+        POP BX
+        POP AX
+          ENDM
+;--------------------------------------
+;输出一串字符
+PRINT MACRO TOP,LEFT,STRING
+MOV AH,02H  
+MOV BX,11111000B   
+MOV DH,TOP  
+MOV DL,LEFT  
+INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+MOV  DX,OFFSET STRING
+MOV  AH,9
+INT  21H
+ENDM 
+;--------------------------------------
+;CLEAR SCREEN
+CLS MACRO
+MOV AH,06H  
+MOV AL,00H
+MOV CX,0100H
+MOV DX,8025
+INT 10H
+ENDM
+;--------------------------------------
+ DATA   SEGMENT
+ MESS   DB  'THE MODEL OF ELEVATOR' ,0AH,0DH,'$'
+
+ ME1    DB  'PRESS ANY KEY TO RETURN CONTINUE.',0AH,0DH,'$'
+ ME2    DB  'THE WAY TO USE:',10，13，'$'
+ ME3    DB  '1.PRESS',' ',18H,' ','OR',' ',19H,' ','TO CONTROL THE ELEVATOR',10，13，'$'
+ ME4    DB  '2.INPUT SOME DIGITALS TO CONTROL THE ELEVATOR',10，13，'$'
+ ME5    DB  '3.PRESS A/a TO STOP,PRESS B/b TO RESUME',10，13，'$'
+ ME6    DB  'POWERED BY GGC',10，13，'$'
+ ME7    DB  '2017/6/19',10，13，'$'
+ DZ     DW  0
+ COUNT  DB  0
+ ADR    DB  0
+ DATA   ENDS
+;---------------------------------------   
+ STAC   SEGMENT
+ STA    DW 100 DUP(0)     ; 堆栈段
+ TOP    DW ?
+ STAC   ENDS
+;---------------------------------------
+CODE    SEGMENT
+ASSUME  CS:CODE,DS:DATA;ES:DATA,SS:DATA
+;---------------------------------------
+START:   MOV  AX,DATA      ; 主程序
+         MOV  DS,AX 
+         MOV  AX,STAC
+         MOV  SS,AX
+         MOV  AX,DATA
+         MOV  ES,AX
+         
+         MOV  CX,0 
+         MOV  DX,2479H
+         MOV  BH,7
+         MOV  AX,0601H
+         INT  10H        
+         
+         MOV  AX,03H     ; 置图形显示方式
+         INT  10H           ; 
+         
+         PRINT 00, 1EH, MESS ;SHOW THE MESSAGE
+         PRINT 8, 10, ME1
+         PRINT 01, 10,ME2 
+         PRINT 03, 10,ME3 
+         PRINT 04, 10,ME4 
+         PRINT 05, 10,ME5 
+         PRINT 10, 60,ME6 
+         PRINT 11, 60,ME7 
+         
+STA1:    MOV AH,01H ; CLEAD SCREEN
+         INT 16H
+         JZ STA1
+         CLS
+         
+STA2:    MOV AH,06H  
+         MOV AL,0  
+         MOV BH,11111000B  
+         MOV CH,01  
+         MOV CL,20  
+         MOV DH,25 
+         MOV DL,60 
+         INT 10H
+         
+         MOV CX,11
+         MOV AH,1
+DRAWHOUSE:
+         HENG AH,33,15
+         ADD AH,2
+         LOOP DRAWHOUSE
+         SHU 1,33,21
+         HENG 22,33,16
+         SHU 1,48,21
+         
+         SETPOS 20,40   ;DRAW THE ELEVATOR
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,10001111B  
+         MOV CX,1
+         INT 10H 
+         MOV [ADR],1
+         
+         
+USEARROW:   
+         MOV AH,1
+         INT 21H
+         CMP AL,18H
+         JZ UP
+         CMP AL,19H
+         JZ DOWN
+         CMP AL,27
+         JZ INPUT
+         JMP USEARROW
+         
+UP:      PUSH AX
+         
+         ; MOV DH,22  ;ERASE
+         ; SUB DH,[ADR]
+         ; SUB DH,[ADR]
+         ; MOV AH,DH
+         ; SETPOS AH,40
+         ; MOV BH,0  
+         ; MOV AH,09H  
+         ; MOV AL,0  
+         ; MOV BL,11111000B  
+         ; MOV CX,1
+         ; INT 10H 
+         
+         ; ADD [ADR],1
+         ; MOV DH,22  ;DRAW 
+         ; SUB DH,[ADR]
+         ; SUB DH,[ADR]
+         ; MOV AH,DH
+         ; SETPOS AH,40
+         ; MOV BH,0  
+         ; MOV AH,09H  
+         ; MOV AL,0  
+         ; MOV BL,10001111B  
+         ; MOV CX,1
+         ; INT 10H 
+         
+         POP AX
+         JMP EN
+         ;JMP USEARROW
+         
+DOWN:    PUSH AX
+         POP AX
+         JMP USEARROW
+         
+INPUT:   
+         
+         
+         
+         MOV  AX,4C00H
+         INT  21H        ; 返回DOS.
+         MOV  AH,02H
+         INT  10H        ; 恢复文本显示方式.
+         
+EN:       
+  
+;---------------------------------------
+CODE    ENDS
+END     START
+;----------------------------------------
