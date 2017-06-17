@@ -90,6 +90,8 @@ ENDM
  ME5    DB  '3.PRESS A/a TO STOP,PRESS B/b TO RESUME',10，13，'$'
  ME6    DB  'POWERED BY GGC',10，13，'$'
  ME7    DB  '2017/6/19',10，13，'$'
+ ME8    DB  'NOW AT:',10,13,'$'
+ ME9    DB  'GOING TO:',10,13,'$'
  DZ     DW  0
  COUNT  DB  0
  ADR    DB  0
@@ -103,6 +105,7 @@ ENDM
 CODE    SEGMENT
 ASSUME  CS:CODE,DS:DATA;ES:DATA,SS:DATA
 ;---------------------------------------
+
 START:   MOV  AX,DATA      ; 主程序
          MOV  DS,AX 
          MOV  AX,STAC
@@ -117,8 +120,7 @@ START:   MOV  AX,DATA      ; 主程序
          INT  10H        
          
          MOV  AX,03H     ; 置图形显示方式
-         INT  10H           ; 
-         
+         INT  10H           ;   
          PRINT 00, 1EH, MESS ;SHOW THE MESSAGE
          PRINT 8, 10, ME1
          PRINT 01, 10,ME2 
@@ -133,7 +135,7 @@ STA1:    MOV AH,01H ; CLEAD SCREEN
          JZ STA1
          CLS
          
-STA2:    MOV AH,06H  
+STA2:    MOV AH,06H  ;SHOW THE ELEVATOR
          MOV AL,0  
          MOV BH,11111000B  
          MOV CH,01  
@@ -143,7 +145,13 @@ STA2:    MOV AH,06H
          INT 10H
          
          MOV CX,11
-         MOV AH,1
+         MOV AH,1  
+         
+         ;*************
+         ;JMP DRAWELE
+         ;************* 
+         
+         
 DRAWHOUSE:
          HENG AH,33,15
          ADD AH,2
@@ -152,6 +160,7 @@ DRAWHOUSE:
          HENG 22,33,16
          SHU 1,48,21
          
+DRAWELE: 
          SETPOS 20,40   ;DRAW THE ELEVATOR
          MOV BH,0  
          MOV AH,09H  
@@ -163,49 +172,76 @@ DRAWHOUSE:
          
          
 USEARROW:   
-         MOV AH,1
-         INT 21H
-         CMP AL,18H
+         MOV AH,0H
+         INT 16H
+         CMP AH,48H
          JZ UP
-         CMP AL,19H
+         CMP AH,50H
          JZ DOWN
          CMP AL,27
          JZ INPUT
          JMP USEARROW
          
 UP:      PUSH AX
+         CMP [ADR],10
+         JZ USEARROW
+         MOV DH,22  ;ERASE
+         SUB DH,[ADR]
+         SUB DH,[ADR] 
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,11111000B  
+         MOV CX,1
+         INT 10H 
          
-         ; MOV DH,22  ;ERASE
-         ; SUB DH,[ADR]
-         ; SUB DH,[ADR]
-         ; MOV AH,DH
-         ; SETPOS AH,40
-         ; MOV BH,0  
-         ; MOV AH,09H  
-         ; MOV AL,0  
-         ; MOV BL,11111000B  
-         ; MOV CX,1
-         ; INT 10H 
+         ADD [ADR],1
+         MOV DH,22  ;DRAW 
+         SUB DH,[ADR]
+         SUB DH,[ADR]
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,10001111B  
+         MOV CX,1
+         INT 10H 
          
-         ; ADD [ADR],1
-         ; MOV DH,22  ;DRAW 
-         ; SUB DH,[ADR]
-         ; SUB DH,[ADR]
-         ; MOV AH,DH
-         ; SETPOS AH,40
-         ; MOV BH,0  
-         ; MOV AH,09H  
-         ; MOV AL,0  
-         ; MOV BL,10001111B  
-         ; MOV CX,1
-         ; INT 10H 
-         
-         POP AX
-         JMP EN
-         ;JMP USEARROW
+         POP AX 
+         JMP USEARROW
          
 DOWN:    PUSH AX
-         POP AX
+         CMP [ADR],1
+         JZ USEARROW
+         MOV DH,22  ;ERASE
+         SUB DH,[ADR]
+         SUB DH,[ADR] 
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,11111000B  
+         MOV CX,1
+         INT 10H 
+         
+         SUB [ADR],1
+         MOV DH,22  ;DRAW 
+         SUB DH,[ADR]
+         SUB DH,[ADR]
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,10001111B  
+         MOV CX,1
+         INT 10H 
+         POP AX      
+
          JMP USEARROW
          
 INPUT:   
@@ -216,9 +252,8 @@ INPUT:
          INT  21H        ; 返回DOS.
          MOV  AH,02H
          INT  10H        ; 恢复文本显示方式.
-         
-EN:       
-  
+       
+EN:
 ;---------------------------------------
 CODE    ENDS
 END     START
