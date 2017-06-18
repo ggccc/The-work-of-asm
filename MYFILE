@@ -13,23 +13,22 @@ HENG    MACRO  X1,Y1,X2  ; 写横的宏
         PUSH BX
         PUSH CX
         PUSH DX
-          MOV DH,X1  
-          MOV DL,Y1
-          MOV AH,02H  
-          MOV BX,0              
-          INT 10H
-          MOV  BH,0
-          MOV BL,11111000B
-          MOV AL,'-'
-          MOV  AH,09H             
-          MOV CX,X2
-          INT   10H
+        MOV DH,X1  
+        MOV DL,Y1
+        MOV AH,02H  
+        MOV BX,0              
+        INT 10H
+        MOV  BH,0
+        MOV BL,11111000B
+        MOV AL,'-'
+        MOV  AH,09H             
+        MOV CX,X2
+        INT   10H
         POP DX
         POP CX
         POP BX
         POP AX
           ENDM
-;--------------------------------------
 ;--------------------------------------
 SHU     MACRO  CX1,CY1,CY2
         PUSH AX
@@ -59,6 +58,32 @@ SHU     MACRO  CX1,CY1,CY2
         POP AX
           ENDM
 ;--------------------------------------
+SETNOWAT MACRO NUM 
+        SETPOS 2,58
+        MOV AX,0
+        OR AL,NUM
+        MOV  DX,OFFSET FLOOR
+        ADD DX,AX
+        ADD DX,AX
+        ADD DX,AX
+        MOV BX,10001111B 
+        MOV  AH,9
+        INT  21H
+        ENDM
+        
+SETGOINGTO MACRO NUM
+        SETPOS 4,60
+        MOV AX,0
+        OR AL,NUM
+        MOV  DX,OFFSET FLOOR
+        ADD DX,AX
+        ADD DX,AX
+        ADD DX,AX
+        MOV BX,10001111B 
+        MOV  AH,9
+        INT  21H
+        ENDM          
+;--------------------------------------
 ;输出一串字符
 PRINT MACRO TOP,LEFT,STRING
 MOV AH,02H  
@@ -85,16 +110,20 @@ ENDM
 
  ME1    DB  'PRESS ANY KEY TO RETURN CONTINUE.',0AH,0DH,'$'
  ME2    DB  'THE WAY TO USE:',10，13，'$'
- ME3    DB  '1.PRESS',' ',18H,' ','OR',' ',19H,' ','TO CONTROL THE ELEVATOR',10，13，'$'
- ME4    DB  '2.INPUT SOME DIGITALS TO CONTROL THE ELEVATOR',10，13，'$'
+ ME3    DB  '1.PRESS',' ',18H,' ','OR',' ',19H,' ','TO CONTROL THE ELEVATOR,PRESS ESC TO USE WAY2',10，13，'$'
+ ME4    DB  '2.INPUT SOME DIGITALS TO CONTROL THE ELEVATOR(SEQUENCE BY COMA),PRESS ENTER TO END THE INPUT,PRESS ESC TO EXIT',10，13，'$'
  ME5    DB  '3.PRESS A/a TO STOP,PRESS B/b TO RESUME',10，13，'$'
  ME6    DB  'POWERED BY GGC',10，13，'$'
  ME7    DB  '2017/6/19',10，13，'$'
  ME8    DB  'NOW AT:',10,13,'$'
  ME9    DB  'GOING TO:',10,13,'$'
+ FLOOR  DB  '00','$','01','$','02','$','03','$','04','$','05','$','06','$','07','$','08','$','09','$','10','$'
  DZ     DW  0
  COUNT  DB  0
  ADR    DB  0
+ TEMP   DB  0
+ NUMBER DB 100 DUP (0)
+ INNUM  DB  0
  DATA   ENDS
 ;---------------------------------------   
  STAC   SEGMENT
@@ -126,32 +155,31 @@ START:   MOV  AX,DATA      ; 主程序
          PRINT 01, 10,ME2 
          PRINT 03, 10,ME3 
          PRINT 04, 10,ME4 
-         PRINT 05, 10,ME5 
-         PRINT 10, 60,ME6 
-         PRINT 11, 60,ME7 
+         PRINT 06, 10,ME5 
+         PRINT 11, 60,ME6 
+         PRINT 12, 60,ME7 
          
 STA1:    MOV AH,01H ; CLEAD SCREEN
          INT 16H
          JZ STA1
          CLS
          
-STA2:    MOV AH,06H  ;SHOW THE ELEVATOR
+STA2:    MOV AH,06H  ;SHOW THE SCREEN
          MOV AL,0  
          MOV BH,11111000B  
          MOV CH,01  
-         MOV CL,20  
+         MOV CL,18  
          MOV DH,25 
-         MOV DL,60 
-         INT 10H
-         
-         MOV CX,11
-         MOV AH,1  
+         MOV DL,62 
+         INT 10H  
          
          ;*************
-         ;JMP DRAWELE
+         MOV BX,OFFSET NUMBER
+         JMP INPUT
          ;************* 
          
-         
+         MOV CX,11  ;THE INITIAL SITUATION
+         MOV AH,1
 DRAWHOUSE:
          HENG AH,33,15
          ADD AH,2
@@ -170,6 +198,27 @@ DRAWELE:
          INT 10H 
          MOV [ADR],1
          
+         MOV AH,02H  ; SHOW 'NOW AT'
+         MOV DH,2  
+         MOV DL,50  
+         INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+         MOV  DX,OFFSET ME8
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         
+DRAWNUM: MOV AH,02H  ;SHOW 'GOING TO'
+         MOV DH,4  
+         MOV DL,50  
+         INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+         MOV  DX,OFFSET ME9
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         
+         SETNOWAT [ADR]
+         SETGOINGTO [ADR]
+         
          
 USEARROW:   
          MOV AH,0H
@@ -179,12 +228,20 @@ USEARROW:
          CMP AH,50H
          JZ DOWN
          CMP AL,27
+         MOV BX,OFFSET NUMBER
          JZ INPUT
+         MOV AX,0
+         PUSH AX
          JMP USEARROW
          
-UP:      PUSH AX
+UP:      PUSH AX            
          CMP [ADR],10
          JZ USEARROW
+         SETNOWAT [ADR]
+         MOV AH,[ADR]
+         INC AH
+         MOV [TEMP],AH
+         SETGOINGTO [TEMP]
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -197,7 +254,12 @@ UP:      PUSH AX
          MOV CX,1
          INT 10H 
          
+         CALL DELAY
+         
          ADD [ADR],1
+         SETNOWAT [ADR]
+         SETGOINGTO [ADR]
+         
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
          SUB DH,[ADR]
@@ -216,6 +278,11 @@ UP:      PUSH AX
 DOWN:    PUSH AX
          CMP [ADR],1
          JZ USEARROW
+         SETNOWAT [ADR]
+         MOV AH,[ADR]
+         DEC AH
+         MOV [TEMP],AH
+         SETGOINGTO [TEMP]
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -228,7 +295,11 @@ DOWN:    PUSH AX
          MOV CX,1
          INT 10H 
          
+         CALL DELAY
+         
          SUB [ADR],1
+         SETNOWAT [ADR]
+         SETGOINGTO [ADR]
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
          SUB DH,[ADR]
@@ -245,15 +316,130 @@ DOWN:    PUSH AX
          JMP USEARROW
          
 INPUT:   
+         MOV AH,0
+         INT 16H
+         CMP AL,27  ;ESC
+         JZ CODEEND
+         CMP AL,13  ;ENTER
+         JZ DEAL
+         CMP AL,44
+         JZ ISCOMA
          
+        
+         SUB AL,30H
+CMP1:    CMP AL,0
+         JAE CMP2
+         JMP INPUT
+CMP2:    CMP AL,9
+         JA INPUT
          
+         MOV CL,AL
+         MOV [TEMP],10
+         POP AX
+         XOR AH,AH
+         XOR CH,CH
+         MUL [TEMP]
+         ADD AX,CX
+         PUSH AX
+         JMP INPUT
+         
+ISCOMA:  POP AX
+         MOV [BX],AL
+         INC BX
+         INC [INNUM]
+         JMP INPUT
+         
+DEAL:    MOV CX,0
+         MOV CL,[INNUM]
+         MOV BX,OFFSET NUMBER
+DE:      MOV AL,[BX]
+         INC BX
+         CMP AL,[ADR]
+         JB GDOWN
+         CALL UPP
+         JMP EDEAL
+GDOWN:   
+         CALL DWW
+EDEAL:    
+         LOOP DE
+   
+CODEEND:         
          
          MOV  AX,4C00H
          INT  21H        ; 返回DOS.
          MOV  AH,02H
          INT  10H        ; 恢复文本显示方式.
-       
-EN:
+
+UPP PROC NEAR
+         PUSH CX
+         MOV CX,0
+         SUB AL,[ADR]
+         MOV CL,AL
+UPPP:    PUSHA            
+         CMP [ADR],10
+         JZ USEARROW
+         SETNOWAT [ADR]
+         MOV AH,[ADR]
+         INC AH
+         MOV [TEMP],AH
+         SETGOINGTO [TEMP]
+         MOV DH,22  ;ERASE
+         SUB DH,[ADR]
+         SUB DH,[ADR] 
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,11111000B  
+         MOV CX,1
+         INT 10H 
+         
+         CALL DELAY
+         
+         ADD [ADR],1
+         SETNOWAT [ADR]
+         SETGOINGTO [ADR]
+         
+         MOV DH,22  ;DRAW 
+         SUB DH,[ADR]
+         SUB DH,[ADR]
+         MOV CH,DH
+         SETPOS CH,40
+         MOV BH,0  
+         MOV AH,09H  
+         MOV AL,0  
+         MOV BL,10001111B  
+         MOV CX,1
+         INT 10H 
+         
+         POPA
+         LOOP UPPP
+         POP CX  
+         RET
+UPP ENDP
+
+DWW PROC NEAR
+    PUSHA
+    POPA
+    RET
+DWW ENDP
+    
+         
+DELAY PROC NEAR
+PUSHA
+MOV CX,10
+DEL: 
+MOV AX,0FFFFH
+DELAYY: DEC AX
+        CMP AX,0
+        JZ DELAYY    
+LOOP DEL        
+POPA
+RET
+DELAY ENDP
+
+
 ;---------------------------------------
 CODE    ENDS
 END     START
