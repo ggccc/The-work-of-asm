@@ -1,114 +1,128 @@
 ;-----------------------------------------------------------
 ;设置光标位置  
 SETPOS MACRO TOP,LEFT  
-MOV AH,02H  
-MOV BX,0  
-MOV DH,TOP  
-MOV DL,LEFT  
-INT 10H  
+         MOV AH,02H  
+         MOV BX,0  
+         MOV DH,TOP  
+         MOV DL,LEFT  
+         INT 10H  
 ENDM 
 ;--------------------------------------
 HENG    MACRO  X1,Y1,X2  ; 写横的宏 
-        PUSH AX
-        PUSH BX
-        PUSH CX
-        PUSH DX
-        MOV DH,X1  
-        MOV DL,Y1
-        MOV AH,02H  
-        MOV BX,0              
-        INT 10H
-        MOV  BH,0
-        MOV BL,11111000B
-        MOV AL,'-'
-        MOV  AH,09H             
-        MOV CX,X2
-        INT   10H
-        POP DX
-        POP CX
-        POP BX
-        POP AX
-          ENDM
+         PUSH AX
+         PUSH BX
+         PUSH CX
+         PUSH DX
+         MOV DH,X1  
+         MOV DL,Y1
+         MOV AH,02H  
+         MOV BX,0              
+         INT 10H
+         MOV  BH,0
+         MOV BL,11111000B
+         MOV AL,'-'
+         MOV  AH,09H             
+         MOV CX,X2
+         INT   10H
+         POP DX
+         POP CX
+         POP BX
+         POP AX
+ENDM
 ;--------------------------------------
 SHU     MACRO  CX1,CY1,CY2
-        PUSH AX
-        PUSH BX
-        PUSH CX
-        PUSH DX
- LOCAL   BH2
-          MOV [COUNT],0
-          MOV DH,CX1  
-          MOV DL,CY1 
-  BH2:    MOV AH,02H  
-          MOV BX,0  
-          INT 10H
-          MOV BH,0
-          MOV BL,11111000B
-          MOV AL,'|'
-          MOV CX,1
-          MOV AH,09H
-          INT 10H
-          INC DH
-          INC [COUNT]
-          CMP [COUNT],CY2
-          JNZ  BH2
-        POP DX
-        POP CX
-        POP BX
-        POP AX
-          ENDM
+         PUSH AX
+         PUSH BX
+         PUSH CX
+         PUSH DX
+LOCAL    BH2
+         MOV [COUNT],0
+         MOV DH,CX1  
+         MOV DL,CY1 
+BH2:     MOV AH,02H  
+         MOV BX,0  
+         INT 10H
+         MOV BH,0
+         MOV BL,11111000B
+         MOV AL,'|'
+         MOV CX,1
+         MOV AH,09H
+         INT 10H
+         INC DH
+         INC [COUNT]
+         CMP [COUNT],CY2
+         JNZ  BH2
+         POP DX
+         POP CX
+         POP BX
+         POP AX
+ENDM
 ;--------------------------------------
 SETNOWAT MACRO NUM 
-        PUSHA
-        SETPOS 2,58
-        MOV AX,0
-        OR AL,NUM
-        MOV  DX,OFFSET FLOOR
-        ADD DX,AX
-        ADD DX,AX
-        ADD DX,AX
-        MOV BX,10001111B 
-        MOV  AH,9
-        INT  21H
-        POPA
-        ENDM
+         PUSHA
+         SETPOS 2,58
+         MOV AX,0
+         OR AL,NUM
+         MOV  DX,OFFSET FLOOR
+         ADD DX,AX
+         ADD DX,AX
+         ADD DX,AX
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         POPA
+ENDM
         
 SETGOINGTO MACRO NUM
-        PUSHA
-        SETPOS 4,60
-        MOV AX,0
-        OR AL,NUM
-        MOV  DX,OFFSET FLOOR
-        ADD DX,AX
-        ADD DX,AX
-        ADD DX,AX
-        MOV BX,10001111B 
-        MOV  AH,9
-        INT  21H
-        POPA
-        ENDM          
+         PUSHA
+         SETPOS 4,60
+         MOV AX,0
+         OR AL,NUM
+         MOV  DX,OFFSET FLOOR
+         ADD DX,AX
+         ADD DX,AX
+         ADD DX,AX
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         POPA
+ENDM
+
+SETSTATUS MACRO NUM
+         PUSHA
+         SETPOS 6,57
+         MOV AX,0
+         OR AL,NUM
+         MOV  DX,OFFSET STATE
+         ADD DX,AX
+         ADD DX,AX
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         POPA
+ENDM          
 ;--------------------------------------
 ;输出一串字符
 PRINT MACRO TOP,LEFT,STRING
-PUSHA
-MOV AH,02H  
-MOV BX,11111000B   
-MOV DH,TOP  
-MOV DL,LEFT  
-INT 10H ;USE SETPOS WILL BE WRONG,WHY?
-MOV  DX,OFFSET STRING
-MOV  AH,9
-INT  21H
-POPA
+         PUSHA
+         MOV AH,02H  
+         MOV BX,11111000B   
+         MOV DH,TOP  
+         MOV DL,LEFT  
+         INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+         MOV  DX,OFFSET STRING
+         MOV  AH,9
+         INT  21H
+         POPA
 ENDM 
 ;--------------------------------------
 ;CLEAR SCREEN
 CLS MACRO
-MOV AH,06H  
-MOV AL,00H
-MOV CX,0100H
-MOV DX,8025
-INT 10H
+         MOV AH,06H  
+         MOV AL,00H
+         MOV CX,0100H
+         MOV DX,8025
+         INT 10H
 ENDM
 ;--------------------------------------
  DATA   SEGMENT
@@ -124,7 +138,9 @@ ENDM
  ME8    DB  'NOW AT:',10,13,'$'
  ME9    DB  'GOING TO:',10,13,'$'
  ME10   DB  'INPUT:','$'
+ ME11   DB  'STATUS:','$'
  FLOOR  DB  '00','$','01','$','02','$','03','$','04','$','05','$','06','$','07','$','08','$','09','$','10','$'
+ STATE  DB  35,'$',18H,'$',19H,'$',35,'$'   ;UP,DOWN,STOP
  ROW    DB  0
  COL    DB  0
  COUNT  DB  0
@@ -215,6 +231,15 @@ DRAWELE:
          MOV  AH,9
          INT  21H
          
+         MOV AH,02H  ; SHOW 'STATUS'
+         MOV DH,6  
+         MOV DL,50  
+         INT 10H ;
+         MOV  DX,OFFSET ME11
+         MOV BX,10001111B 
+         MOV  AH,9
+         INT  21H
+         
 DRAWNUM: MOV AH,02H  ;SHOW 'GOING TO'
          MOV DH,4  
          MOV DL,50  
@@ -226,6 +251,7 @@ DRAWNUM: MOV AH,02H  ;SHOW 'GOING TO'
          
          SETNOWAT [ADR]
          SETGOINGTO [ADR]
+         SETSTATUS 3H
          
          
 USEARROW:   
@@ -238,7 +264,7 @@ USEARROW:
          CMP AL,27
          JNZ USE
          MOV BX,OFFSET NUMBER
-         MOV [ROW],6
+         MOV [ROW],8
          MOV [COL],57
          MOV AX,0
          PUSH AX
@@ -254,6 +280,7 @@ UP:      PUSH AX
          INC AH
          MOV [TEMP],AH
          SETGOINGTO [TEMP]
+         SETSTATUS 1H
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -271,6 +298,7 @@ UP:      PUSH AX
          ADD [ADR],1
          SETNOWAT [ADR]
          SETGOINGTO [ADR]
+         SETSTATUS 3H
          
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
@@ -295,6 +323,7 @@ DOWN:    PUSH AX
          DEC AH
          MOV [TEMP],AH
          SETGOINGTO [TEMP]
+         SETSTATUS 2H
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -312,6 +341,7 @@ DOWN:    PUSH AX
          SUB [ADR],1
          SETNOWAT [ADR]
          SETGOINGTO [ADR]
+         SETSTATUS 3H
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
          SUB DH,[ADR]
@@ -328,7 +358,7 @@ DOWN:    PUSH AX
          JMP USEARROW
          
 INPUT:   
-         PRINT 6,50,ME10
+         PRINT 8,50,ME10
          MOV AH,0
          INT 16H
          CMP AL,27  ;ESC
@@ -405,7 +435,8 @@ DEAL:
          MOV CX,0
          MOV CL,[INNUM]
          MOV BX,OFFSET NUMBER
-DE:      MOV AL,[BX]
+DE:      
+         MOV AL,[BX]
          INC BX
          CMP AL,[ADR]
          JB GDOWN
@@ -415,14 +446,14 @@ GDOWN:
          CALL DWW
 EDEAL:    
          LOOP DE
-         MOV [ROW],6
+         MOV [ROW],8
          MOV [COL],57
          MOV AX,0
          PUSH AX
          
          MOV AH,06H  
          MOV AL,00H
-         MOV CH,06
+         MOV CH,08
          MOV CL,50
          MOV DH,22
          MOV DL,62
@@ -450,7 +481,20 @@ UPP PROC NEAR
 EQUL:    
          POP CX
          RET
-UPPP:    PUSHA            
+UPPP:    PUSHA   
+         
+         PUSHA
+         MOV AH,1
+         INT 16H
+         CMP AL,'A'
+         JNZ S2
+         CALL STOPSTATE
+         JMP S3
+S2:      CMP AL,'a'
+         JNZ S3
+         CALL STOPSTATE
+S3:      POPA
+
          CMP [ADR],10
          JZ ENDUPP
          SETNOWAT [ADR]
@@ -458,6 +502,7 @@ UPPP:    PUSHA
          INC AH
          MOV [TEMP],AH
          SETGOINGTO [TEMP]
+         SETSTATUS 1H
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -475,6 +520,7 @@ UPPP:    PUSHA
          ADD [ADR],1
          SETNOWAT [ADR]
          SETGOINGTO [ADR]
+         SETSTATUS 3H
          
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
@@ -502,6 +548,19 @@ DWW PROC NEAR
          SUB CL,AL
          
 DWWW:    PUSHA
+         
+         PUSHA
+         MOV AH,1
+         INT 16H
+         CMP AL,'A'
+         JNZ S4
+         CALL STOPSTATE
+         JMP S5
+S4:      CMP AL,'a'
+         JNZ S5
+         CALL STOPSTATE
+S5:      POPA
+
          CMP [ADR],1
          JZ ENDDWW
          SETNOWAT [ADR]
@@ -509,6 +568,7 @@ DWWW:    PUSHA
          DEC AH
          MOV [TEMP],AH
          SETGOINGTO [TEMP]
+         SETSTATUS 2H
          MOV DH,22  ;ERASE
          SUB DH,[ADR]
          SUB DH,[ADR] 
@@ -526,6 +586,7 @@ DWWW:    PUSHA
          SUB [ADR],1
          SETNOWAT [ADR]
          SETGOINGTO [ADR]
+         SETSTATUS 3H
          MOV DH,22  ;DRAW 
          SUB DH,[ADR]
          SUB DH,[ADR]
@@ -547,18 +608,39 @@ DWW ENDP
     
          
 DELAY PROC NEAR
-PUSHA
-MOV CX,10
+         PUSHA
+         MOV CX,10
 DEL: 
-MOV AX,0FFFFH
+         MOV AX,0FFFFH
 DELAYY: DEC AX
-        CMP AX,0
-        JZ DELAYY    
-LOOP DEL        
-POPA
-RET
+         CMP AX,0
+         JZ DELAYY    
+         LOOP DEL        
+         POPA
+         RET
 DELAY ENDP
 
+STOPSTATE PROC NEAR
+         PUSHA
+         MOV AH,0CH     ;CLEAR KEYBOARD BUFFER
+         MOV AL,0BH
+         INT 21H
+REPEAT:  MOV AH,0
+         MOV AL,0
+         INT 16H
+         MOV BL,AL
+         CMP AL,'B'
+         JZ RESUMESTATE
+         CMP AL,'b'
+         JZ RESUMESTATE
+         JMP REPEAT
+RESUMESTATE:       
+         MOV AH,0CH
+         MOV AL,0BH
+         INT 21H
+         POPA
+         RET
+STOPSTATE ENDP
 
 ;---------------------------------------
 CODE    ENDS
