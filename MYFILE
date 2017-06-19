@@ -1,6 +1,5 @@
-;-----------------------------------------------------------
-;设置光标位置  
-SETPOS MACRO TOP,LEFT  
+;----------------------------------------------------------- 
+SETPOS MACRO TOP,LEFT       ;设置光标位置 
          MOV AH,02H  
          MOV BX,0  
          MOV DH,TOP  
@@ -8,7 +7,7 @@ SETPOS MACRO TOP,LEFT
          INT 10H  
 ENDM 
 ;--------------------------------------
-HENG    MACRO  X1,Y1,X2  ; 写横的宏 
+HENG    MACRO  X1,Y1,X2         ; 写横的宏 
          PUSH AX
          PUSH BX
          PUSH CX
@@ -30,7 +29,7 @@ HENG    MACRO  X1,Y1,X2  ; 写横的宏
          POP AX
 ENDM
 ;--------------------------------------
-SHU     MACRO  CX1,CY1,CY2
+SHU     MACRO  CX1,CY1,CY2          ;写竖的宏
          PUSH AX
          PUSH BX
          PUSH CX
@@ -58,7 +57,7 @@ BH2:     MOV AH,02H
          POP AX
 ENDM
 ;--------------------------------------
-SETNOWAT MACRO NUM 
+SETNOWAT MACRO NUM      ;显示NOW AT:后的数字
          PUSHA
          SETPOS 2,58
          MOV AX,0
@@ -73,7 +72,7 @@ SETNOWAT MACRO NUM
          POPA
 ENDM
         
-SETGOINGTO MACRO NUM
+SETGOINGTO MACRO NUM        ;显示GOING TO:后的数字
          PUSHA
          SETPOS 4,60
          MOV AX,0
@@ -88,7 +87,7 @@ SETGOINGTO MACRO NUM
          POPA
 ENDM
 
-SETSTATUS MACRO NUM
+SETSTATUS MACRO NUM         ;显示STATUS:后的数字
          PUSHA
          SETPOS 6,57
          MOV AX,0
@@ -102,8 +101,7 @@ SETSTATUS MACRO NUM
          POPA
 ENDM          
 ;--------------------------------------
-;输出一串字符
-PRINT MACRO TOP,LEFT,STRING
+PRINT MACRO TOP,LEFT,STRING         ;输出一串字符
          PUSHA
          MOV AH,02H  
          MOV BX,11111000B   
@@ -116,8 +114,7 @@ PRINT MACRO TOP,LEFT,STRING
          POPA
 ENDM 
 ;--------------------------------------
-;CLEAR SCREEN
-CLS MACRO
+CLS MACRO           ;初始化屏幕
          MOV AH,06H  
          MOV AL,00H
          MOV CX,0100H
@@ -125,7 +122,7 @@ CLS MACRO
          INT 10H
 ENDM
 ;--------------------------------------
- DATA   SEGMENT
+ DATA   SEGMENT         ;各种变量，字符串
  MESS   DB  'THE MODEL OF ELEVATOR' ,0AH,0DH,'$'
 
  ME1    DB  'PRESS ANY KEY TO RETURN CONTINUE.',0AH,0DH,'$'
@@ -166,15 +163,15 @@ START:   MOV  AX,DATA      ; 主程序
          MOV  AX,DATA
          MOV  ES,AX
          
-         MOV  CX,0 
+         MOV  CX,0          ;清屏
          MOV  DX,2479H
          MOV  BH,7
          MOV  AX,0601H
          INT  10H        
          
-         MOV  AX,03H     ; 置图形显示方式
-         INT  10H           ;   
-         PRINT 00, 1EH, MESS ;SHOW THE MESSAGE
+         MOV  AX,03H        ; 置图形显示方式80x25
+         INT  10H              
+         PRINT 00, 1EH, MESS        ;显示提示信息
          PRINT 8, 10, ME1
          PRINT 01, 10,ME2 
          PRINT 03, 10,ME3 
@@ -183,12 +180,12 @@ START:   MOV  AX,DATA      ; 主程序
          PRINT 11, 60,ME6 
          PRINT 12, 60,ME7 
          
-STA1:    MOV AH,01H ; CLEAD SCREEN
+STA1:    MOV AH,01H         ; 接收任意键，进入模拟程序
          INT 16H
          JZ STA1
          CLS
          
-STA2:    MOV AH,06H  ;SHOW THE SCREEN
+STA2:    MOV AH,06H         ;初始化屏幕
          MOV AL,0  
          MOV BH,11111000B  
          MOV CH,01  
@@ -198,13 +195,13 @@ STA2:    MOV AH,06H  ;SHOW THE SCREEN
          INT 10H  
          
          ;*************
-         ;MOV BX,OFFSET NUMBER
+         ;MOV BX,OFFSET NUMBER      ;测试用
          ;JMP INPUT
          ;************* 
          
-         MOV CX,11  ;THE INITIAL SITUATION
+         MOV CX,11          ;设置模拟大楼高度
          MOV AH,1
-DRAWHOUSE:
+DRAWHOUSE:                  ;画出大楼
          HENG AH,33,15
          ADD AH,2
          LOOP DRAWHOUSE
@@ -213,7 +210,7 @@ DRAWHOUSE:
          SHU 1,48,21
          
 DRAWELE: 
-         SETPOS 20,40   ;DRAW THE ELEVATOR
+         SETPOS 20,40           ;画出电梯
          MOV BH,0  
          MOV AH,09H  
          MOV AL,0  
@@ -222,16 +219,16 @@ DRAWELE:
          INT 10H 
          MOV [ADR],1
          
-         MOV AH,02H  ; SHOW 'NOW AT'
+         MOV AH,02H         ;显示'NOW AT'
          MOV DH,2  
          MOV DL,50  
-         INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+         INT 10H 
          MOV  DX,OFFSET ME8
          MOV BX,10001111B 
          MOV  AH,9
          INT  21H
          
-         MOV AH,02H  ; SHOW 'STATUS'
+         MOV AH,02H         ;显示 'STATUS'
          MOV DH,6  
          MOV DL,50  
          INT 10H ;
@@ -240,23 +237,23 @@ DRAWELE:
          MOV  AH,9
          INT  21H
          
-DRAWNUM: MOV AH,02H  ;SHOW 'GOING TO'
+DRAWNUM: MOV AH,02H         ;显示 'GOING TO'
          MOV DH,4  
          MOV DL,50  
-         INT 10H ;USE SETPOS WILL BE WRONG,WHY?
+         INT 10H 
          MOV  DX,OFFSET ME9
          MOV BX,10001111B 
          MOV  AH,9
          INT  21H
          
-         SETNOWAT [ADR]
-         SETGOINGTO [ADR]
-         SETSTATUS 3H
+         SETNOWAT [ADR]         ;设置正处在x层
+         SETGOINGTO [ADR]       ;设置正前往x层
+         SETSTATUS 3H           ;设置电梯运行状态
          
          
 USEARROW:   
-         MOV AH,0H
-         INT 16H
+         MOV AH,0H              ;接收一个按键,根据按键ascii码，完成相应功能
+         INT 16H                
          CMP AH,48H
          JZ UP
          CMP AH,50H
@@ -272,7 +269,7 @@ USEARROW:
 USE:                   
          JMP USEARROW
          
-UP:      PUSH AX            
+UP:      PUSH AX                ;完成方向键上功能
          CMP [ADR],10
          JZ USEARROW
          SETNOWAT [ADR]
@@ -281,7 +278,7 @@ UP:      PUSH AX
          MOV [TEMP],AH
          SETGOINGTO [TEMP]
          SETSTATUS 1H
-         MOV DH,22  ;ERASE
+         MOV DH,22  
          SUB DH,[ADR]
          SUB DH,[ADR] 
          MOV CH,DH
@@ -315,7 +312,7 @@ UP:      PUSH AX
          POP AX 
          JMP USEARROW
          
-DOWN:    PUSH AX
+DOWN:    PUSH AX                ;完成方向键下功能
          CMP [ADR],1
          JZ USEARROW
          SETNOWAT [ADR]
@@ -358,7 +355,7 @@ DOWN:    PUSH AX
          JMP USEARROW
          
 INPUT:   
-         PRINT 8,50,ME10
+         PRINT 8,50,ME10            ;完成按输入数字顺序运行功能
          MOV AH,0
          INT 16H
          CMP AL,27  ;ESC
@@ -377,7 +374,7 @@ CMP2:    CMP AL,9
          JA INPUT
          
          PUSHA
-         MOV AH,02H  ;DISPLAY THE NUMBER
+         MOV AH,02H             ;显示输入的数字
          MOV BX,0 
          CMP [COL],62  
          JB NOTFILL
@@ -406,8 +403,8 @@ NOTFILL:
          JMP INPUT
          
 ISCOMA:  
-         PUSHA
-         MOV AH,02H  ;DISPLAY THE NUMBER
+         PUSHA                  ;将输入的数字以逗号分隔
+         MOV AH,02H             ;显示输入的数字
          MOV BX,0 
          CMP [COL],62  
          JB NOTFILLCOMA
@@ -431,14 +428,14 @@ NOTFILLCOMA:
          INC [INNUM]
          JMP INPUT
          
-DEAL:    
+DEAL:                           ;按顺序处理输入的数字
          MOV CX,0
          MOV CL,[INNUM]
          MOV BX,OFFSET NUMBER
 DE:      
          MOV AL,[BX]
          INC BX
-         CMP AL,[ADR]
+         CMP AL,[ADR]           ;判断是上升还是下降
          JB GDOWN
          CALL UPP
          JMP EDEAL
@@ -446,7 +443,7 @@ GDOWN:
          CALL DWW
 EDEAL:    
          LOOP DE
-         MOV [ROW],8
+         MOV [ROW],8            ;处理完一组数据后，初始化条件
          MOV [COL],57
          MOV AX,0
          PUSH AX
@@ -471,7 +468,7 @@ CODEEND:
          MOV  AH,02H
          INT  10H        ; 恢复文本显示方式.
 
-UPP PROC NEAR
+UPP PROC NEAR           ;电梯上升的子程序
          PUSH CX
          MOV CX,0
          SUB AL,[ADR]
@@ -483,7 +480,7 @@ EQUL:
          RET
 UPPP:    PUSHA   
          
-         PUSHA
+         PUSHA              ;判断是否需要中断运行
          MOV AH,1
          INT 16H
          CMP AL,'A'
@@ -541,7 +538,7 @@ ENDUPP:
          RET
 UPP ENDP          
          
-DWW PROC NEAR
+DWW PROC NEAR               ;电梯下降的子程序
          PUSH CX
          MOV CX,0
          MOV  CL,[ADR]
@@ -549,7 +546,7 @@ DWW PROC NEAR
          
 DWWW:    PUSHA
          
-         PUSHA
+         PUSHA              ;判断是否需要中断运行
          MOV AH,1
          INT 16H
          CMP AL,'A'
@@ -607,7 +604,7 @@ ENDDWW:
 DWW ENDP
     
          
-DELAY PROC NEAR
+DELAY PROC NEAR             ;延时子程序
          PUSHA
          MOV CX,10
 DEL: 
@@ -620,9 +617,9 @@ DELAYY: DEC AX
          RET
 DELAY ENDP
 
-STOPSTATE PROC NEAR
+STOPSTATE PROC NEAR         ;进入中断
          PUSHA
-         MOV AH,0CH     ;CLEAR KEYBOARD BUFFER
+         MOV AH,0CH         ;清除键盘缓冲区
          MOV AL,0BH
          INT 21H
 REPEAT:  MOV AH,0
@@ -643,6 +640,6 @@ RESUMESTATE:
 STOPSTATE ENDP
 
 ;---------------------------------------
-CODE    ENDS
+CODE    ENDS                ;程序结束
 END     START
 ;----------------------------------------
